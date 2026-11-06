@@ -173,6 +173,31 @@ secondary_voice = "" #@param {type:"string"}
 nb.generate_audio(main_voice, secondary_voice)
 '''
 
+QA_CODE = '''
+#@title 6a. Check the audio { display-mode: "form" }
+nb.quality_check()
+'''
+
+ACCEPT_CODE = '''
+#@title 6b. Accept all remaining flags { display-mode: "form" }
+#@markdown Only after listening to the flagged pieces in the report.
+i_have_listened_and_they_are_fine = False #@param {type:"boolean"}
+nb.accept_flags(i_have_listened_and_they_are_fine)
+'''
+
+REGEN_CODE = '''
+#@title 6c. Make particular pieces again { display-mode: "form" }
+#@markdown Copy the ids from the report, separated by commas, for example `c003-p0012-u01, c004-p0002-u02`.
+unit_ids = "" #@param {type:"string"}
+nb.regenerate_units(unit_ids)
+'''
+
+SPOT_CODE = '''
+#@title 6d. Spot check: listen to a random sample { display-mode: "form" }
+how_many = 10 #@param {type:"integer"}
+nb.spot_check(how_many)
+'''
+
 PACKAGE_CODE = '''
 #@title 7. Package and download { display-mode: "form" }
 #@markdown Leave empty for all formats in book.yaml, or type for example `m4b,mp3`.
@@ -279,6 +304,21 @@ Most voices need a **GPU** (Kokoro also works without one, more slowly). The fir
 session installs the voice engine, which takes a few minutes.
 """),
         code(GENERATE_CODE, "generate_audio"),
+        md("""
+## 6. Quality review
+
+Lektor listens to its own audio: every piece of speech is transcribed by Whisper and compared with the text.
+It also looks for long silences, clipping, repeated phrases and speech that is much too fast or slow. Pieces
+that fail are made again automatically (up to three times). The report lists what is still flagged, with
+an audio player for each: listen, then accept them (6b) or make particular ones again (6c). If a flag is a
+real mistake in the text, fix it in script.md and run sections 5 and 6 again.
+
+The spot check (6d) plays a random sample, because automatic checks cannot judge everything.
+"""),
+        code(QA_CODE, "quality_check"),
+        code(ACCEPT_CODE, "accept_flags"),
+        code(REGEN_CODE, "regenerate_units"),
+        code(SPOT_CODE, "spot_check"),
         md("""
 ## 7. Package and download
 

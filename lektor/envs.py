@@ -191,6 +191,11 @@ def ensure_env(name: str, log: Callable[[str], None] = print, force: bool = Fals
 def env_vars(name: str) -> dict[str, str]:
     env = dict(os.environ)
     env["PYTHONPATH"] = str(lektor_src())
+    # CUDA libraries installed as pip packages (nvidia-*-cu12) must be on the
+    # library path for CTranslate2 (faster-whisper) to find them.
+    libs = sorted(str(p) for p in env_dir(name).glob("lib/python3*/site-packages/nvidia/*/lib") if p.is_dir())
+    if libs:
+        env["LD_LIBRARY_PATH"] = ":".join(libs + [env.get("LD_LIBRARY_PATH", "")]).rstrip(":")
     env["PYTHONNOUSERSITE"] = "1"
     env.pop("PYTHONHOME", None)
     return env

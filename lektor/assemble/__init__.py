@@ -164,13 +164,17 @@ class ChapterAudio:
     entry: dict
 
 
-def chapter_fingerprint(units: list[Unit], cfg: BookConfig) -> str:
+def chapter_fingerprint(units: list[Unit], cfg: BookConfig, cache: Optional[UnitCache] = None) -> str:
+    """Changes when a unit, a setting or a unit's audio changes (quality
+    checks may replace a unit's audio under the same cache key)."""
     h = hashlib.sha256()
     h.update(ASSEMBLY_VERSION.encode())
     h.update(cfg.pauses.model_dump_json().encode())
     h.update(cfg.audio.model_dump_json().encode())
     for u in units:
         h.update(f"{u.id}|{u.cache_key}|{u.boundary}|{u.kind}|{u.chapter_title}".encode())
+        if cache is not None and cache.has(u.cache_key):
+            h.update(hashlib.sha1(cache.path(u.cache_key).read_bytes()).digest())
     return h.hexdigest()[:20]
 
 
@@ -258,7 +262,7 @@ def run_assemble(paths: BookPaths, cfg: BookConfig, units: Optional[list[Unit]] 
     chapters = []
     built = 0
     for c, title, cu in chapters_of(units):
-        fp = chapter_fingerprint(cu, cfg)
+        fp = chapter_fingerprint(cu, cfg, cache)
         out = d / f"{c:03d}.flac"
         prev = old.get(c)
         if prev and prev.get("fingerprint") == fp and out.exists():

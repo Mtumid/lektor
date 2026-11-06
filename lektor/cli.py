@@ -124,6 +124,25 @@ def cmd_assemble(args) -> int:
     return 0
 
 
+@command("qa", "check every unit with Whisper, retry failures, write qa_report.html")
+def cmd_qa(args) -> int:
+    from .qa.runner import accept_all, regenerate, run_qa
+
+    paths, cfg = _book(args)
+    if args.accept_all:
+        print(f"Accepted {accept_all(paths)} flagged units.")
+        return 0
+    if args.regenerate:
+        for r in regenerate(paths, cfg, args.regenerate.split(",")):
+            print(f"{r.unit_id}: {'ok' if r.passed else '; '.join(r.flags)}")
+        return 0
+    s = run_qa(paths, cfg, retry=not args.no_retry, progress=not args.no_progress)
+    print(f"Checked {s.checked} of {s.total_units}: {s.passed_first_time} fine first time, {s.fixed_by_retry} fixed "
+          f"by retrying, {s.accepted} accepted, {s.still_flagged} still flagged.")
+    print(f"Report: {paths.qa_report}")
+    return 0
+
+
 @command("package", "build the output packages (M4B, MP3, DAISY)")
 def cmd_package(args) -> int:
     from .package import run_package
@@ -183,6 +202,11 @@ def build_parser() -> argparse.ArgumentParser:
             p.add_argument("--no-progress", action="store_true")
         if name == "package":
             p.add_argument("--formats", help="comma separated: daisy,m4b,mp3")
+        if name == "qa":
+            p.add_argument("--no-retry", action="store_true")
+            p.add_argument("--no-progress", action="store_true")
+            p.add_argument("--accept-all", action="store_true")
+            p.add_argument("--regenerate", help="comma separated unit ids to make again")
         _extend = EXTRA_ARGS.get(name)
         if _extend:
             _extend(p)

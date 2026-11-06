@@ -1,5 +1,39 @@
 # Changelog
 
+## M4 Quality checks
+
+### Added
+- **faster-whisper worker** (`lektor/qa/whisper.py`) in its own `whisper` environment (`faster-whisper==1.2.1` with
+  `nvidia-cublas-cu12` and `nvidia-cudnn-cu12==9.*`, put on `LD_LIBRARY_PATH` automatically). Word timestamps are
+  kept for milestone 5. Whisper is never primed with the expected text (that would hide errors).
+- **Checks** (`lektor/qa/checks.py`): word and character error rates with jiwer after normalising transcript and
+  spoken text the same way (the transcript also goes through Lektor's normaliser, so "120 BPM" matches "one hundred
+  and twenty B P M"); speaking rate outside the band learned for each voice from its first 300 units (median ±
+  a robust spread); internal silences over 1.2 s; clipping; empty or invalid audio; repetition loops.
+- **Retries** (`lektor/qa/runner.py`): failing units are made again with new seeds up to `qa.retries` (3) times;
+  multi-sentence units that still fail are made sentence by sentence and joined; the best attempt is kept.
+  Results are stored in `qa/qa_results.json` with a signature of the audio, so reruns only check what changed.
+- **QA report** (`qa/qa_report.html`): summary, then each flagged unit with its id, the text, what the voice was
+  given, what Whisper heard, a word diff, the problems and an embedded audio player.
+- Notebook section 6: 6a check, 6b accept remaining flags (with a confirmation tick), 6c make particular units
+  again, 6d spot check (a random sample to listen to). CLI: `qa` (`--accept-all`, `--regenerate`).
+- Assembly now notices when a unit's audio was replaced (chapter fingerprints include an audio signature), so
+  retried units reach the chapter files.
+- Smoke test: Whisper transcribes every engine's sample and reports a word error rate per voice.
+- Tests: checks, retries, splitting, acceptance, regeneration, re-assembly and the report, with a fake
+  transcriber (207 tests in total).
+
+### Assumptions and decisions
+- **QA runs as its own stage after generation** (section 6), not inside section 5. Whisper loads once; the speech
+  engine is loaded only for retries. Both fit on the T4 together (distil-large-v3 in int8_float16 needs about
+  1 GB), so retries do not need models to be swapped in and out.
+- **Model**: `distil-large-v3` (Systran, MIT, English) on a GPU, `small.en` on CPU (`qa.whisper_model: auto`).
+  `large-v3-turbo` was considered, but its Hugging Face repository has been renamed since faster-whisper 1.2.1 was
+  released, so the download could break.
+- A unit is flagged for words when it has at least two word errors and a WER over `qa.max_wer` (15 %), or, for
+  very short units, a character error rate over 50 %. Duration flags need at least 20 units to learn from.
+- Retried audio replaces the unit's audio under the same cache key, so reruns of synthesis keep the better take.
+
 ## M3 Real voices in Colab
 
 ### Added

@@ -122,7 +122,9 @@ class AudioSettings(_Section):
 
 
 class QASettings(_Section):
-    whisper_model: str = "small.en"
+    # "auto": distil-large-v3 on a GPU (about 1 GB, fits next to any voice),
+    # small.en on CPU. Any faster-whisper model name may be given.
+    whisper_model: str = "auto"
     max_wer: float = 0.15
     max_silence_s: float = 1.2
     retries: int = 3
