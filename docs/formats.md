@@ -6,8 +6,7 @@
 | **M4B** audiobook | `<book>.m4b` | Apple Books (Mac, iPhone), BookPlayer (iOS), Smart AudioBook Player (Android), VLC | chapters |
 | **MP3** files | `<book>_mp3.zip` | any player, car stereos, Windows Media Player | one file per chapter, numbered |
 
-Milestone status: M4B and MP3 are made from milestone 2; DAISY arrives in
-milestone 5.
+All three are made by notebook section 7 (and `python -m lektor package`).
 
 ## Technical details
 
@@ -22,8 +21,29 @@ milestone 5.
 - The first chapter is always the spoken front matter ("About this
   audiobook"): title, author, publisher, the accessibility statement, the
   acknowledgement and a line saying the narration is synthetic.
+- DAISY 2.02: full text and full audio (`ncc:multimediaType audioFullText`).
+  One XHTML content file, one SMIL file and one MP3 (mono, 64 kbps,
+  44.1 kHz) per chapter; every sentence has an id and a SMIL `par` linking
+  it to its audio clip (`clip-begin`/`clip-end` in `npt=` form). Clips are
+  contiguous, so pauses are played. The NCC has the title, every heading
+  (h1 to h6, as in the script) and every print page (`page-normal`,
+  `page-front` for roman numerals, `page-special` otherwise), with the
+  required Dublin Core and `ncc:` metadata. The accessibility statement is
+  in `dc:description`, the acknowledgement in `dc:rights`, the synthetic
+  narrator in `ncc:narrator`. All files sit at the top of the ZIP with short
+  lower case names, so nothing ever needs renaming.
+- Each DAISY book is checked before it is zipped: against the DAISY
+  Pipeline 2 RelaxNG schemas for DAISY 2.02 (downloaded once from a pinned
+  commit), plus structural checks for links, ids, timing and metadata. The
+  report is `output/daisy_check.txt`.
 
 ## Testing on the student's devices
 
-Instructions for checking the DAISY book in EasyReader and Thorium come
-with milestone 5.
+See [testing-daisy.md](testing-daisy.md) for a ten minute check in Thorium
+Reader and Dolphin EasyReader.
+
+## Later
+
+EPUB 3 with Media Overlays will be another writer on top of the same
+timing map (`audio/timing.json`), which already records every sentence,
+heading and page with its time.

@@ -453,6 +453,11 @@ def package(formats: str = "", book_id: str = "") -> None:
     r = run_package(paths, cfg, wanted, log=print)
     for kind, path in r.files.items():
         link(path, kind.upper())
+    check = paths.output_dir / "daisy_check.txt"
+    if "daisy" in r.files and check.exists():
+        first = [l for l in check.read_text().splitlines() if l.strip()][-1]
+        say(f"DAISY check: {first}.", "ok")
+        link(check, "DAISY check report")
     for n in r.notes:
         say(n, "warn")
     say("The files are in the book's output folder in Drive. Download them from there.", "ok")

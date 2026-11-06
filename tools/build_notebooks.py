@@ -322,8 +322,16 @@ The spot check (6d) plays a random sample, because automatic checks cannot judge
         md("""
 ## 7. Package and download
 
-Builds the finished files in the book's `output` folder: an **M4B** audiobook with chapters, a ZIP of
-**MP3** files (one per chapter) and, from milestone 5, the **DAISY** book for EasyReader.
+Builds the finished files in the book's `output` folder:
+
+- **DAISY 2.02** (`..._daisy.zip`): full text and full audio for Dolphin EasyReader and Thorium Reader, with
+  navigation by heading and by print page, and the text highlighted as it is read. Lektor checks it against
+  the DAISY 2.02 rules before zipping it (`daisy_check.txt`).
+- **M4B** audiobook with chapters, for Apple Books and audiobook apps.
+- **MP3** files, one per chapter, in a ZIP.
+
+A row is added to `My Drive/Lektor/production_records.csv` (the library's record of accessible copies).
+Before sending the files, check them on a device as described in `docs/testing-daisy.md`.
 """),
         code(PACKAGE_CODE, "package"),
     ]

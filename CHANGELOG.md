@@ -1,5 +1,47 @@
 # Changelog
 
+## M5 DAISY 2.02 and production records (0.5.0)
+
+### Added
+- **DAISY 2.02 full text and full audio** (`lektor/package/daisy202.py`), one book per ZIP, generated from the
+  timing map: `ncc.html` (title, every heading h1 to h6, every print page as `page-normal`, `page-front` or
+  `page-special`, and the required Dublin Core and `ncc:` metadata including `ncc:totalTime`, page counts,
+  `ncc:tocItems`, `ncc:depth`, `ncc:files`, `ncc:multimediaType audioFullText`, `ncc:charset`); one XHTML content
+  file with an id on every sentence, one SMIL 1.0 file and one MP3 per chapter; `par endsync="last"` linking each
+  sentence to its clip in `npt=` form. Clips are contiguous so the pauses between sentences are played.
+  Accessibility statement in `dc:description`, acknowledgement in `dc:rights`, narrator in `ncc:narrator`.
+- **DAISY checks** (`lektor/package/daisy_check.py`): validation against the RelaxNG schemas of the DAISY
+  Pipeline 2 validator for DAISY 2.02 (downloaded once from a pinned commit; not bundled, as they are LGPL-3.0),
+  plus structural self checks mirroring the Pipeline's reference and SMIL timing checks: every SMIL referenced,
+  every link and id resolves, unique ids, title first, no heading jumps, valid increasing clips inside the audio,
+  `timeInThisSmil`, `totalElapsedTime` and `totalTime` consistent, metadata counts match. Report in
+  `output/daisy_check.txt`; packaging stops if there are errors. Negative tests break books in five ways and
+  check each is caught.
+- Sentence boundaries inside multi-sentence units are snapped to the quietest point nearby during assembly, so
+  highlighting changes when the voice pauses.
+- **Production records** (`lektor/records.py`): one row per packaging run in `MyDrive/Lektor/production_records.csv`
+  with date, book id, title, author, publisher, source file, permission basis, formats, engine and voice
+  presets, Lektor version and recipient code. No student names.
+- Packaging warns when the statement wording is unconfirmed, there is no recipient code, or quality flags remain.
+- Notebook section 7 covers DAISY; the smoke test reports the DAISY check. Docs: `docs/testing-daisy.md`
+  (Thorium and EasyReader test steps), `docs/formats.md` updated. 217 tests.
+
+### Assumptions and decisions
+- **The DAISY Pipeline 2 validator itself (Java) is not run in Colab.** Its RelaxNG schemas are used directly
+  with lxml instead, which needs no Java and no 300 MB download. libxml2 lacks RelaxNG's compatibility datatype
+  library, so its ID/IDREF types are mapped to XML Schema's when the schemas are loaded; the Schematron rules
+  embedded in the schemas are covered by Lektor's own checks. The reference book from the Pipeline's test suite
+  validates with this set-up.
+- daisy.org could not be reached from the development sandbox; the specification's rules were taken from the
+  Pipeline's schemas and test book (github.com/daisy/pipeline-modules, commit 88d39392), which encode it.
+- One SMIL and one content file per chapter, with the files at the top of the ZIP and short names
+  (`ncc.html`, `c0001.html`, `s0001.smil`, `a0001.mp3`).
+- DAISY MP3s are 44.1 kHz mono (MPEG-1 Layer III, the most widely supported), 64 kbps.
+- A chapter with no heading of its own (for example "Opening pages") gets an NCC heading from its title,
+  because DAISY 2.02 players only reach SMIL files that the NCC links to.
+- Footnotes and library notes are read in line and are not marked as skippable DAISY notes yet
+  (`ncc:footnotes 0`); marking them as skippable is a possible improvement.
+
 ## M4 Quality checks
 
 ### Added
