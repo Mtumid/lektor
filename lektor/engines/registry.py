@@ -26,6 +26,7 @@ ENGINES: dict[str, str] = {
     "qwen3-custom": "lektor.engines.qwen3:QwenCustomVoiceEngine",
     "qwen3-design": "lektor.engines.qwen3:QwenVoiceDesignEngine",
     "qwen3-base": "lektor.engines.qwen3:QwenBaseCloneEngine",
+    "whisper": "lektor.qa.whisper:WhisperEngine",  # speech recognition for quality checks
 }
 
 # Isolated environments for the engines (see lektor/envs.py). Versions were
@@ -44,6 +45,14 @@ register_env(EnvSpec(
     python="3.11",
     check="import chatterbox.tts, chatterbox.tts_turbo",
     notes="chatterbox-tts pins torch 2.6.0, numpy<2 and transformers 5.2.0; Resemble AI test on Python 3.11.",
+))
+register_env(EnvSpec(
+    name="whisper",
+    # CTranslate2 4.x needs CUDA 12 cuBLAS and cuDNN 9; they come as pip
+    # packages and are put on LD_LIBRARY_PATH by lektor.envs.env_vars.
+    packages=("faster-whisper==1.2.1", "nvidia-cublas-cu12", "nvidia-cudnn-cu12==9.*"),
+    python="3.12",
+    check="import faster_whisper, ctranslate2",
 ))
 register_env(EnvSpec(
     name="qwen3",

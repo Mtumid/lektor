@@ -376,6 +376,72 @@ def generate_audio(main_voice: str = "", secondary_voice: str = "", book_id: str
 
 
 # ---------------------------------------------------------------------------
+# 6. Quality review
+# ---------------------------------------------------------------------------
+@step
+def quality_check(book_id: str = "") -> None:
+    from .assemble import run_assemble
+    from .qa.runner import run_qa
+
+    paths, cfg = _current(book_id)
+    s = run_qa(paths, cfg, log=print)
+    say(f"Checked {s.checked} of {s.total_units} pieces of speech: {s.passed_first_time} fine first time, "
+        f"{s.fixed_by_retry} fixed by making them again, {s.accepted} accepted by you, "
+        f"{s.still_flagged} still flagged.", "ok" if not s.still_flagged else "warn")
+    if s.fixed_by_retry:
+        run_assemble(paths, cfg, log=print)
+    link(paths.qa_report, "Quality report (download and open it to listen to each flagged piece)")
+    if s.still_flagged:
+        say("Listen to the flagged pieces in the report. Then either accept them all (6b), make particular ones "
+            "again (6c), or fix the text in script.md and run sections 5 and 6 again.", "info")
+        _show_review_inline(paths.qa_report)
+
+
+@step
+def accept_flags(confirm: bool = False, book_id: str = "") -> None:
+    from .qa.runner import accept_all
+
+    paths, _ = _current(book_id)
+    if not confirm:
+        say("Tick the box to confirm that you have listened to the flagged pieces and they are acceptable.", "warn")
+        return
+    say(f"Accepted {accept_all(paths)} flagged pieces.", "ok")
+
+
+@step
+def regenerate_units(unit_ids: str, book_id: str = "") -> None:
+    from .assemble import run_assemble
+    from .qa.runner import regenerate
+
+    paths, cfg = _current(book_id)
+    results = regenerate(paths, cfg, unit_ids.replace(" ", "").split(","), log=print)
+    for r in results:
+        say(f"{r.unit_id}: " + ("made again and checked: fine" if r.passed else "made again, still flagged: "
+                                + "; ".join(r.flags)), "ok" if r.passed else "warn")
+    run_assemble(paths, cfg, log=print)
+
+
+@step
+def spot_check(how_many: int = 10, book_id: str = "") -> None:
+    from .qa.runner import spot_check as _spot
+
+    paths, _ = _current(book_id)
+    picked = _spot(paths, int(how_many))
+    try:
+        from IPython.display import Audio, HTML, display
+    except Exception:
+        display = None
+    for u, path in picked:
+        if display:
+            display(HTML(f"<p><code>{html.escape(u.id)}</code> (page {html.escape(u.page or '?')}): "
+                         f"{html.escape(u.display)}</p>"))
+            display(Audio(str(path)))
+        else:
+            print(u.id, u.display, path)
+    say("If one sounds wrong, copy its id into 6c to make it again.", "info")
+
+
+# ---------------------------------------------------------------------------
 # 7. Package and download
 # ---------------------------------------------------------------------------
 @step

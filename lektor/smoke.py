@@ -228,7 +228,26 @@ def run_smoke(home: Path, presets: Optional[list[str]] = None, log: Callable[[st
                 enc.unload()
         _run(report, "voice consistency (cosine)", consistency_step, log)
 
-    # 5. Whole pipeline with the mock voice, all packagers
+    # 5. Whisper: transcribe every sample, word error rate per voice
+    samples = [(p, out_dir / f"{p}.mp3") for p in presets if (out_dir / f"{p}.mp3").exists()]
+    if include_qa and samples:
+        def whisper_step():
+            from .qa.checks import error_rates
+            from .qa.whisper import WhisperTranscriber
+
+            with WhisperTranscriber("auto", log=log) as tr:
+                info = tr.worker.info
+                outs = tr.transcribe([str(f) for _, f in samples])
+            parts = []
+            for (name, _), o in zip(samples, outs):
+                wer, _, _ = error_rates(spoken, norm(o["text"]))
+                parts.append(f"{name} {wer:.0%}")
+            (out_dir / "whisper_transcripts.json").write_text(json.dumps(
+                {n: o["text"] for (n, _), o in zip(samples, outs)}, indent=1))
+            return f"{info.get('model')} {info.get('compute_type')} on {info.get('device')}; WER " + ", ".join(parts)
+        _run(report, "whisper: transcribe samples", whisper_step, log)
+
+    # 6. Whole pipeline with the mock voice, all packagers
     def pipeline_step():
         import fixtures
 
