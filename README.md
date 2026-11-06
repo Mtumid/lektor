@@ -1,6 +1,6 @@
 # Lektor
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/OWNER/lektor/blob/main/notebooks/Lektor.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mtumid/lektor/blob/main/notebooks/Lektor.ipynb)
 
 Lektor turns a book (PDF, EPUB, Word, HTML, plain text or Markdown) into an
 **accessible audiobook** for print disabled students, read by natural

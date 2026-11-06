@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-REPO = "OWNER/lektor"  # GitHub owner/name; also used by the README badge
+REPO = "Mtumid/lektor"  # GitHub owner/name; also used by the README badge
 
 
 def md(text: str) -> dict:
