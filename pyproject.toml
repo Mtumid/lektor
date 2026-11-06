@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lektor"
-version = "0.1.0"
+version = "0.5.0"
 description = "Turn long documents into accessible audiobooks (DAISY 2.02, M4B, MP3) with open source speech models."
 readme = "README.md"
 requires-python = ">=3.10"

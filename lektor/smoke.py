@@ -271,9 +271,11 @@ def run_smoke(home: Path, presets: Optional[list[str]] = None, log: Callable[[st
             run_prepare(paths, cfg, log=lambda m: None)
             run_synth(paths, cfg, progress=False, log=lambda m: None)
             t = run_assemble(paths, cfg, log=lambda m: None)
-            res = run_package(paths, cfg, log=lambda m: None)
+            res = run_package(paths, cfg, log=lambda m: None, record=False)
             info = probe(res.files["m4b"])
-            return (f"{len(t['chapters'])} chapters; m4b {len(info['chapters'])} chapter marks; "
-                    + ", ".join(sorted(res.files)))
+            check = (paths.output_dir / "daisy_check.txt").read_text()
+            schema = "schemas OK" if "validated against the DAISY Pipeline 2 schemas" in check else "schemas skipped"
+            return (f"{len(t['chapters'])} chapters; m4b {len(info['chapters'])} chapter marks; daisy {schema}, "
+                    + check.strip().splitlines()[-1] + "; " + ", ".join(sorted(res.files)))
     _run(report, "pipeline + packagers (mock voice)", pipeline_step, log)
     return report

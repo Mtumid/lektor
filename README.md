@@ -1,6 +1,6 @@
 # Lektor
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/OWNER/lektor/blob/main/notebooks/Lektor.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mtumid/lektor/blob/main/notebooks/Lektor.ipynb)
 
 Lektor turns a book (PDF, EPUB, Word, HTML, plain text or Markdown) into an
 **accessible audiobook** for print disabled students, read by natural
@@ -34,9 +34,9 @@ explanation and a single cell: fill in the boxes, then press ▶.
 | 6. Quality review | Lektor transcribes its own audio and flags sentences that went wrong | Listen to the flagged ones, accept or regenerate |
 | 7. Package | Builds the DAISY, M4B and MP3 files and records the copy | Download and send to the student |
 
-> **Status**: milestones 1 to 4 are done: steps 0 to 7 work, with M4B and
-> MP3 output. The DAISY book arrives in milestone 5; see
-> [CHANGELOG.md](CHANGELOG.md).
+> **Status**: all five prototype milestones are written and tested on CPU
+> (217 automated tests). Real voices and Docling still need to be confirmed
+> on Colab with the smoke test; see [CHANGELOG.md](CHANGELOG.md).
 >
 > **Checking a new version**: open `notebooks/Smoke_Test.ipynb` in Colab,
 > run both cells, and send the table it prints to the developer.
@@ -120,6 +120,7 @@ No. Use a recipient code that you can look up in the library's own records.
 - [Script format](docs/script-format.md): how to read and edit `script.md`
 - [Lexicon](docs/lexicon.md): fixing pronunciation
 - [Formats](docs/formats.md): which app plays which file
+- [Testing the DAISY book](docs/testing-daisy.md): a ten minute check in Thorium and EasyReader
 - [Accessibility and copyright](docs/accessibility-and-copyright.md): what Lektor may change, statements, records
 - [Engines](docs/engines.md): the voices, their licences and requirements
 - [Adding an engine](docs/adding-an-engine.md): for developers

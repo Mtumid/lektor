@@ -190,6 +190,45 @@ def _sentence_times(u: Unit, start: float, end: float) -> list[dict]:
     return out
 
 
+def snap_sentence_boundaries(sents: list[dict], audio: np.ndarray, sr: int, offset: float,
+                             window: float = 0.6) -> None:
+    """Move each estimated boundary between sentences of one unit to the
+    quietest 40 ms nearby, which is where the voice paused. This keeps DAISY
+    text highlighting in step with the voice."""
+    frame = max(1, int(0.04 * sr))
+    hop = max(1, frame // 2)
+    if audio.size < 3 * frame:
+        return
+    n = 1 + (audio.size - frame) // hop
+    idx = np.arange(n)[:, None] * hop + np.arange(frame)[None, :]
+    energy = np.sqrt(np.mean(audio[idx] ** 2, axis=1) + 1e-12)
+    lo_limit = sents[0]["start"] - offset
+    for k in range(1, len(sents)):
+        est = sents[k]["start"] - offset
+        hi_limit = sents[k]["end"] - offset
+        lo = max(lo_limit + 0.1, est - window)
+        hi = min(hi_limit - 0.1, est + window)
+        if hi <= lo:
+            continue
+        f0, f1 = int(lo * sr) // hop, min(n, int(hi * sr) // hop + 1)
+        if f1 <= f0:
+            continue
+        seg = energy[f0:f1]
+        k_min = int(np.argmin(seg))
+        quiet = seg <= seg[k_min] * 2.0 + 1e-6
+        a0 = k_min
+        while a0 > 0 and quiet[a0 - 1]:
+            a0 -= 1
+        a1 = k_min
+        while a1 < len(seg) - 1 and quiet[a1 + 1]:
+            a1 += 1
+        best = f0 + (a0 + a1) / 2  # the middle of the quietest stretch
+        t = round(offset + (best * hop + frame / 2) / sr, 3)
+        sents[k - 1]["end"] = t
+        sents[k]["start"] = t
+        lo_limit = t - offset
+
+
 def build_chapter(chapter: int, title: str, units: list[Unit], cache: UnitCache, cfg: BookConfig,
                   out_path: Path) -> tuple[np.ndarray, dict]:
     sr = cfg.audio.sample_rate
@@ -209,9 +248,12 @@ def build_chapter(chapter: int, title: str, units: list[Unit], cache: UnitCache,
         start = t
         pieces.append(a)
         t += a.size / sr
+        sents = _sentence_times(u, start, t)
+        if len(sents) > 1:
+            snap_sentence_boundaries(sents, a, sr, start)
         entries.append({"id": u.id, "kind": u.kind, "role": u.role, "heading_level": u.heading_level,
                         "start": round(start, 3), "end": round(t, 3), "ref": u.ref, "line": u.line,
-                        "sentences": _sentence_times(u, start, t)})
+                        "sentences": sents})
         nxt = units[i + 1] if i + 1 < len(units) else None
         gap = np.zeros(int(pause_after(u, nxt, cfg) * sr), dtype=np.float32)
         pieces.append(gap)

@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-REPO = "OWNER/lektor"  # GitHub owner/name; also used by the README badge
+REPO = "Mtumid/lektor"  # GitHub owner/name; also used by the README badge
 
 
 def md(text: str) -> dict:
@@ -73,6 +73,10 @@ if r.returncode != 0:
     print("If the repository is private, add a GITHUB_TOKEN secret (key icon in the left sidebar) and allow")
     print("this notebook to use it. Also check the branch name.")
     print("Details:", msg.strip()[-500:])
+elif not os.path.exists("/content/lektor/pyproject.toml"):
+    print(f"The branch '{{branch}}' of {{repository}} does not contain Lektor yet (it is empty).")
+    print("Type the name of a branch that does, for example m5-daisy-records, in the 'branch' box and run")
+    print("this cell again. Once the pull requests are merged, 'main' will work.")
 else:
     p = subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-e", "/content/lektor"],
                        capture_output=True, text=True)
@@ -322,8 +326,16 @@ The spot check (6d) plays a random sample, because automatic checks cannot judge
         md("""
 ## 7. Package and download
 
-Builds the finished files in the book's `output` folder: an **M4B** audiobook with chapters, a ZIP of
-**MP3** files (one per chapter) and, from milestone 5, the **DAISY** book for EasyReader.
+Builds the finished files in the book's `output` folder:
+
+- **DAISY 2.02** (`..._daisy.zip`): full text and full audio for Dolphin EasyReader and Thorium Reader, with
+  navigation by heading and by print page, and the text highlighted as it is read. Lektor checks it against
+  the DAISY 2.02 rules before zipping it (`daisy_check.txt`).
+- **M4B** audiobook with chapters, for Apple Books and audiobook apps.
+- **MP3** files, one per chapter, in a ZIP.
+
+A row is added to `My Drive/Lektor/production_records.csv` (the library's record of accessible copies).
+Before sending the files, check them on a device as described in `docs/testing-daisy.md`.
 """),
         code(PACKAGE_CODE, "package"),
     ]

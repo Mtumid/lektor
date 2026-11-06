@@ -14,4 +14,4 @@ The package is organised by pipeline stage:
 Every stage is reachable from ``python -m lektor <stage>`` (see ``lektor.cli``).
 """
 
-__version__ = "0.1.0"
+__version__ = "0.5.0"
