@@ -73,6 +73,10 @@ if r.returncode != 0:
     print("If the repository is private, add a GITHUB_TOKEN secret (key icon in the left sidebar) and allow")
     print("this notebook to use it. Also check the branch name.")
     print("Details:", msg.strip()[-500:])
+elif not os.path.exists("/content/lektor/pyproject.toml"):
+    print(f"The branch '{{branch}}' of {{repository}} does not contain Lektor yet (it is empty).")
+    print("Type the name of a branch that does, for example m5-daisy-records, in the 'branch' box and run")
+    print("this cell again. Once the pull requests are merged, 'main' will work.")
 else:
     p = subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-e", "/content/lektor"],
                        capture_output=True, text=True)
