@@ -38,15 +38,40 @@ class SynthResult:
     audio_seconds: float = 0.0
 
 
+LOAD_OPTIONS = ("dtype", "device", "model")
+
+
+def synth_params(params: dict) -> dict:
+    """Parameters for a synthesis call (load-time options removed)."""
+    return {k: v for k, v in params.items() if k not in LOAD_OPTIONS + ("allow_cpu",)}
+
+
+def gpu_available() -> bool:
+    import shutil
+    import subprocess
+
+    if not shutil.which("nvidia-smi"):
+        return False
+    try:
+        return subprocess.run(["nvidia-smi", "-L"], capture_output=True, text=True, timeout=20).stdout.strip() != ""
+    except Exception:
+        return False
+
+
 def open_engine(preset: Preset, home: Path, log: Callable[[str], None] = print) -> Engine:
     """Start an engine for a preset: in-process, or as a worker in its own environment."""
     cls = engine_class(preset.engine)
+    options = {k: preset.params[k] for k in LOAD_OPTIONS if k in preset.params}
+    if cls.needs_gpu and not gpu_available() and not preset.params.get("allow_cpu"):
+        raise EngineError(f"The voice '{preset.name}' ({preset.engine}) needs a GPU, and this Colab session has none.",
+                          hint="Runtime menu > Change runtime type > T4 GPU > Save, then run section 0 again. "
+                               "Or choose a Kokoro voice, which works without a GPU.")
     if cls.env is None:
-        eng = cls()
+        eng = cls(**options)
     else:
         from .engines.client import WorkerEngine
 
-        eng = WorkerEngine(cls, log=log)
+        eng = WorkerEngine(cls, log=log, options=options)
     eng.load()
     return eng
 
@@ -133,6 +158,10 @@ def run_synth(paths: BookPaths, cfg: BookConfig, units: Optional[list[Unit]] = N
         groups.setdefault(u.preset, []).append(u)
 
     home = paths.lektor_home
+    if engine_factory is None:
+        from .voice_design import ensure_designs
+
+        ensure_designs(list(groups), home, log)
     bar = Progress(sum(len(u.spoken) for u in todo), len(todo), "Making audio", progress)
     failures_path = paths.qa_dir / "synth_failures.json"
     try:
@@ -144,8 +173,8 @@ def run_synth(paths: BookPaths, cfg: BookConfig, units: Optional[list[Unit]] = N
             try:
                 for i in range(0, len(group), max(1, batch)):
                     chunk = group[i: i + batch]
-                    items = [{"text": u.spoken, "voice": preset.voice, "params": u.params, "seed": u.seed,
-                              "reference": str(ref) if ref else None} for u in chunk]
+                    items = [{"text": u.spoken, "voice": preset.voice, "params": synth_params(u.params),
+                              "seed": u.seed, "reference": str(ref) if ref else None} for u in chunk]
                     try:
                         audios = engine.synthesize_batch(items)
                     except LektorError:

@@ -141,6 +141,29 @@ sentence = "Set the tempo to 120 BPM and sidechain the pad at -6 dB with a 4:1 r
 nb.try_pronunciation(sentence)
 '''
 
+AUDITION_CODE = '''
+#@title 4a. Make the voice audition { display-mode: "form" }
+#@markdown **Chapter**: a number, or a few words of a strategy's title. Empty: the first chapter with enough text.
+chapter = "" #@param {type:"string"}
+#@markdown **Voices**: leave empty for the default eight, or list presets separated by commas (see 4c).
+voices = "" #@param {type:"string"}
+seconds = 120 #@param {type:"integer"}
+nb.audition(chapter, voices, seconds)
+'''
+
+CHOOSE_CODE = '''
+#@title 4b. Record the student's choice { display-mode: "form" }
+letter = "A" #@param ["A", "B", "C", "D", "E", "F", "G", "H"]
+#@markdown Optional: a different voice for library additions (captions, notes). Empty keeps the current one.
+secondary_voice = "" #@param {type:"string"}
+nb.choose_voice(letter, secondary_voice)
+'''
+
+VOICES_CODE = '''
+#@title 4c. List all voice presets { display-mode: "form" }
+nb.list_voices()
+'''
+
 GENERATE_CODE = '''
 #@title 5. Generate audio { display-mode: "form" }
 #@markdown Leave the voices empty to use the ones in book.yaml (the voice chosen in the audition).
@@ -228,11 +251,32 @@ that matter, save, and run the cell again. See `docs/lexicon.md` for details.
         code(LEXICON_CODE, "prepare_speech"),
         code(TRY_CODE, "try_pronunciation"),
         md("""
+## 4. Voice audition
+
+Before the whole book is made, the student chooses the voice. This cell reads the same passage (about two
+minutes) with several voices and labels them **A to H in a random order**, so she is not influenced by names.
+It makes one file per voice, a combined `audition.mp3` with each voice announced, faster versions (1.5x and
+2x, because some voices fall apart when sped up), and a feedback form. Everything is in the book's
+`audition` folder in Drive. Send her the MP3 files and `feedback.txt`; keep `key.json` to yourself.
+
+The first run installs each voice engine (a few minutes each) and needs a **GPU** for most of them.
+British voices for Chatterbox and Qwen3-TTS are *designed* from a written description the first time (no
+real person's voice is used); the designed clips are saved in `My Drive/Lektor/voices/designed/`.
+"""),
+        code(AUDITION_CODE, "audition"),
+        code(CHOOSE_CODE, "choose_voice"),
+        code(VOICES_CODE, "list_voices"),
+        md("""
 ## 5. Generate audio
 
-Reads the whole book aloud. This takes hours for a long book. Progress is saved to Drive as it goes:
-**if Colab disconnects, run section 0 again and then this cell again**, and it carries on where it stopped.
-After an edit to the script or the lexicon, only the affected sentences are made again.
+Reads the whole book aloud with the voices in book.yaml (the one chosen in the audition). This takes from
+under an hour (Kokoro) to many hours (Chatterbox, Qwen3-TTS) for a long book, so it may need several Colab
+sessions. Progress is saved to Drive as it goes: **if Colab disconnects, run section 0 again and then this
+cell again**, and it carries on where it stopped. After an edit to the script or the lexicon, only the
+affected sentences are made again.
+
+Most voices need a **GPU** (Kokoro also works without one, more slowly). The first run in each Colab
+session installs the voice engine, which takes a few minutes.
 """),
         code(GENERATE_CODE, "generate_audio"),
         md("""
@@ -246,11 +290,41 @@ Builds the finished files in the book's `output` folder: an **M4B** audiobook wi
     return notebook(cells)
 
 
+SMOKE_CODE = '''
+#@title 1. Run the smoke test { display-mode: "form" }
+#@markdown Leave empty to test every engine. This takes about 30 to 60 minutes the first time
+#@markdown (each engine is installed and its model downloaded).
+voices = "" #@param {type:"string"}
+include_docling = True #@param {type:"boolean"}
+nb.smoke_test(voices, include_docling)
+'''
+
+
+def smoke_notebook() -> dict:
+    cells = [
+        md("""
+# Lektor smoke test
+
+This checks that every part of Lektor works on Colab: Docling, each voice engine, the designed voices, and
+the packaging. It does not touch your books.
+
+1. *Runtime* menu > *Change runtime type* > **T4 GPU** > *Save*.
+2. Run cell 0, then cell 1.
+3. When it finishes, copy the table between the two marker lines and paste it back to the developer.
+   (It is also saved in `My Drive/Lektor/smoke/smoke_report.txt`, with audio samples you can listen to.)
+"""),
+        code(SETUP_CODE.replace("0. Setup (run this first, every time)", "0. Setup"), "setup"),
+        code(SMOKE_CODE, "smoke_test"),
+    ]
+    return notebook(cells)
+
+
 def main() -> None:
     out = ROOT / "notebooks"
     out.mkdir(exist_ok=True)
     (out / "Lektor.ipynb").write_text(json.dumps(lektor_notebook(), indent=1, ensure_ascii=False) + "\n")
-    print("wrote", out / "Lektor.ipynb")
+    (out / "Smoke_Test.ipynb").write_text(json.dumps(smoke_notebook(), indent=1, ensure_ascii=False) + "\n")
+    print("wrote", out / "Lektor.ipynb", "and", out / "Smoke_Test.ipynb")
 
 
 if __name__ == "__main__":
