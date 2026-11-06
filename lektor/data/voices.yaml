@@ -1,6 +1,6 @@
 # Lektor voice presets.
 #
-# A preset gives a friendly name to an engine, a voice (or a reference clip)
+# A preset gives a friendly name to an engine, a voice (or a designed voice)
 # and its parameters. book.yaml chooses a main and a secondary preset:
 #
 #   voices:
@@ -8,13 +8,161 @@
 #     secondary: kokoro-bm-george
 #
 # To add your own, create MyDrive/Lektor/voices.yaml with the same layout;
-# presets there are added to (or replace) these.
+# presets and designs there are added to (or replace) these.
 #
 # Fields: engine, voice, params, vary (seeded per-paragraph variation,
-# parameter: +/- amount), reference (clip path relative to MyDrive/Lektor),
-# design (how a designed reference clip is made), description, language.
+# parameter: +/- amount), design (a designed voice, below) or reference (a
+# clip path relative to MyDrive/Lektor; it must be synthetic or carry a
+# documented licence), description, language.
+#
+# No preset clones a real person. British voices for Chatterbox and
+# Qwen3-TTS Base are conditioned on clips *designed* from a text description.
+
+designs:
+  # Each design is made once by Qwen3-TTS VoiceDesign and saved to
+  # MyDrive/Lektor/voices/designed/<name>.wav (with its text in .txt).
+  british-female:
+    description: Designed British English female narrator (synthetic; no real person).
+    language: English
+    seed: 1
+    instruct: >-
+      A warm, clear female voice in her late thirties with a natural, educated Southern British English accent.
+      She reads like an experienced audiobook narrator: calm, friendly and unhurried, with gentle, natural
+      intonation, clear consonants and relaxed pauses at commas and full stops.
+    text: >-
+      Welcome. This is a sample of a calm and clear reading voice. It moves at an easy, steady pace, and pauses
+      naturally at commas and full stops, so that a listener can follow long passages without effort. Numbers,
+      names and technical words are spoken carefully, one at a time, and every sentence ends gently before the
+      next one begins.
+  british-male:
+    description: Designed British English male narrator (synthetic; no real person).
+    language: English
+    seed: 1
+    instruct: >-
+      A warm, mellow male voice in his forties with a natural, educated Southern British English accent. He reads
+      like an experienced audiobook narrator: calm, confident and unhurried, with natural intonation, clear
+      diction and relaxed pauses at commas and full stops.
+    text: >-
+      Welcome. This is a sample of a calm and clear reading voice. It moves at an easy, steady pace, and pauses
+      naturally at commas and full stops, so that a listener can follow long passages without effort. Numbers,
+      names and technical words are spoken carefully, one at a time, and every sentence ends gently before the
+      next one begins.
 
 presets:
+  # --- Kokoro (Apache 2.0). Fast; works without a GPU. -----------------------
+  kokoro-bf-emma:
+    engine: kokoro
+    voice: bf_emma
+    description: Kokoro, British female (Emma). The best graded British Kokoro voice.
+  kokoro-bf-isabella:
+    engine: kokoro
+    voice: bf_isabella
+    description: Kokoro, British female (Isabella).
+  kokoro-bf-alice:
+    engine: kokoro
+    voice: bf_alice
+    description: Kokoro, British female (Alice).
+  kokoro-bf-lily:
+    engine: kokoro
+    voice: bf_lily
+    description: Kokoro, British female (Lily).
+  kokoro-bm-george:
+    engine: kokoro
+    voice: bm_george
+    description: Kokoro, British male (George).
+  kokoro-bm-lewis:
+    engine: kokoro
+    voice: bm_lewis
+    description: Kokoro, British male (Lewis).
+  kokoro-bm-fable:
+    engine: kokoro
+    voice: bm_fable
+    description: Kokoro, British male (Fable).
+  kokoro-bm-daniel:
+    engine: kokoro
+    voice: bm_daniel
+    description: Kokoro, British male (Daniel).
+  kokoro-af-heart:
+    engine: kokoro
+    voice: af_heart
+    language: en-US
+    description: Kokoro, American female (Heart). The best graded Kokoro voice overall.
+  kokoro-af-bella:
+    engine: kokoro
+    voice: af_bella
+    language: en-US
+    description: Kokoro, American female (Bella).
+  kokoro-am-michael:
+    engine: kokoro
+    voice: am_michael
+    language: en-US
+    description: Kokoro, American male (Michael).
+  kokoro-am-fenrir:
+    engine: kokoro
+    voice: am_fenrir
+    language: en-US
+    description: Kokoro, American male (Fenrir).
+
+  # --- Chatterbox (MIT). Expressive; needs a GPU. -----------------------------
+  chatterbox-british-female:
+    engine: chatterbox
+    design: british-female
+    params: {exaggeration: 0.5, cfg_weight: 0.5, temperature: 0.8}
+    vary: {exaggeration: 0.1}
+    description: Chatterbox conditioned on the designed British female voice.
+  chatterbox-british-male:
+    engine: chatterbox
+    design: british-male
+    params: {exaggeration: 0.5, cfg_weight: 0.5, temperature: 0.8}
+    vary: {exaggeration: 0.1}
+    description: Chatterbox conditioned on the designed British male voice.
+  chatterbox-default:
+    engine: chatterbox
+    params: {exaggeration: 0.5, cfg_weight: 0.5, temperature: 0.8}
+    vary: {exaggeration: 0.1}
+    language: en-US
+    description: Chatterbox's built-in voice.
+  chatterbox-turbo-british-female:
+    engine: chatterbox-turbo
+    design: british-female
+    params: {temperature: 0.8}
+    description: Chatterbox Turbo conditioned on the designed British female voice.
+  chatterbox-turbo-british-male:
+    engine: chatterbox-turbo
+    design: british-male
+    params: {temperature: 0.8}
+    description: Chatterbox Turbo conditioned on the designed British male voice.
+  chatterbox-turbo-default:
+    engine: chatterbox-turbo
+    params: {temperature: 0.8}
+    language: en-US
+    description: Chatterbox Turbo's built-in voice.
+
+  # --- Qwen3-TTS (Apache 2.0). Needs a GPU. -----------------------------------
+  qwen-ryan:
+    engine: qwen3-custom
+    voice: Ryan
+    params: {language: English, instruct: "Read calmly and clearly, like an audiobook narrator, at a relaxed pace."}
+    language: en-US
+    description: Qwen3-TTS built-in English male speaker (Ryan) with a narration instruction.
+  qwen-aiden:
+    engine: qwen3-custom
+    voice: Aiden
+    params: {language: English, instruct: "Read calmly and clearly, like an audiobook narrator, at a relaxed pace."}
+    language: en-US
+    description: Qwen3-TTS built-in American male speaker (Aiden) with a narration instruction.
+  qwen-british-female:
+    engine: qwen3-base
+    design: british-female
+    params: {language: English}
+    description: Qwen3-TTS Base cloning the designed British female voice ("design once, then clone").
+  qwen-british-male:
+    engine: qwen3-base
+    design: british-male
+    params: {language: English}
+    description: Qwen3-TTS Base cloning the designed British male voice ("design once, then clone").
+
+  # --- Test tones (no real voice) ----------------------------------------------
   mock-main:
     engine: mock
     voice: low

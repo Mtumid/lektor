@@ -273,6 +273,78 @@ def try_pronunciation(text: str, book_id: str = "") -> None:
 
 
 # ---------------------------------------------------------------------------
+# 4. Voice audition
+# ---------------------------------------------------------------------------
+@step
+def audition(chapter: str = "", voices: str = "", seconds: int = 120, book_id: str = "") -> None:
+    from .audition import DEFAULT_PRESETS, run_audition
+
+    paths, cfg = _current(book_id)
+    presets = [v.strip() for v in voices.split(",") if v.strip()] or DEFAULT_PRESETS
+    r = run_audition(paths, cfg, presets, chapter, int(seconds), log=print)
+    if r.failed:
+        say("Some voices could not be made: " + "; ".join(f"{p}: {m}" for p, m in r.failed.items()), "warn")
+    if not r.files:
+        raise LektorError("No voice could be rendered.", hint="Check the GPU (section 0) and try again.")
+    say(f"The audition is ready: {len(r.files)} voices, labelled {', '.join(r.files)}.", "ok")
+    for label, path in r.combined.items():
+        link(path, f"Audition, all voices, {label}")
+    link(r.folder / "feedback.txt", "Feedback form for the student")
+    link(r.folder / "key.json", "Key (which letter is which voice): keep this to yourself")
+    say("Send the student the audition files and the feedback form from the audition folder in Drive "
+        "(not key.json). When she has chosen, use the next cell.", "info")
+    try:
+        from IPython.display import Audio, display
+
+        if r.combined.get("1x"):
+            display(Audio(str(r.combined["1x"])))
+    except Exception:
+        pass
+
+
+@step
+def choose_voice(letter: str, secondary_voice: str = "", book_id: str = "") -> None:
+    from .audition import choose_voice as _choose
+
+    paths, cfg = _current(book_id)
+    preset = _choose(paths, cfg, letter, secondary_voice.strip())
+    say(f"Voice {letter.upper()} is {preset}. It is now the main voice in book.yaml. The secondary voice (for "
+        f"library additions) is {cfg.voices.secondary}.", "ok")
+
+
+def list_voices() -> None:
+    from .engines.registry import engine_class, load_presets
+
+    rows = []
+    for name, p in sorted(load_presets(_home()).items()):
+        if p.engine == "mock":
+            continue
+        cls = engine_class(p.engine)
+        rows.append(f"{name:34} {'GPU' if cls.needs_gpu else 'CPU/GPU':8} {p.description}")
+    print("\n".join(rows))
+
+
+# ---------------------------------------------------------------------------
+# Smoke test
+# ---------------------------------------------------------------------------
+@step
+def smoke_test(voices: str = "", include_docling: bool = True) -> None:
+    from .smoke import run_smoke
+
+    presets = [v.strip() for v in voices.split(",") if v.strip()] or None
+    report = run_smoke(_home(), presets, log=print, include_docling=include_docling)
+    table = report.table()
+    out = _home() / "smoke" / "smoke_report.txt"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(table, encoding="utf-8")
+    print("\n" + "=" * 30 + " COPY EVERYTHING BELOW THIS LINE " + "=" * 30 + "\n")
+    print(table)
+    print("\n" + "=" * 30 + " COPY EVERYTHING ABOVE THIS LINE " + "=" * 30)
+    say(f"The report is also saved in {str(out).replace('/content/drive/MyDrive', 'My Drive')}, and the audio "
+        "samples are next to it so you can listen to them.", "info")
+
+
+# ---------------------------------------------------------------------------
 # 5. Generate audio
 # ---------------------------------------------------------------------------
 @step

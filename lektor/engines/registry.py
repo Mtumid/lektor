@@ -14,14 +14,47 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
 
-import yaml
-
+from ..envs import EnvSpec, register_env
 from ..errors import ConfigError
 from .base import Engine
 
 ENGINES: dict[str, str] = {
     "mock": "lektor.engines.mock:MockEngine",
+    "kokoro": "lektor.engines.kokoro:KokoroEngine",
+    "chatterbox": "lektor.engines.chatterbox:ChatterboxEngine",
+    "chatterbox-turbo": "lektor.engines.chatterbox:ChatterboxTurboEngine",
+    "qwen3-custom": "lektor.engines.qwen3:QwenCustomVoiceEngine",
+    "qwen3-design": "lektor.engines.qwen3:QwenVoiceDesignEngine",
+    "qwen3-base": "lektor.engines.qwen3:QwenBaseCloneEngine",
 }
+
+# Isolated environments for the engines (see lektor/envs.py). Versions were
+# checked on PyPI in November 2026; see docs/engines.md.
+register_env(EnvSpec(
+    name="kokoro",
+    packages=("kokoro==0.9.4", "misaki[en]==0.9.4", "torch==2.11.*", "soundfile", "pip"),
+    python="3.12",
+    apt=("espeak-ng",),
+    check="import kokoro, misaki",
+    notes="pip is included because misaki downloads its spaCy English model with pip on first use.",
+))
+register_env(EnvSpec(
+    name="chatterbox",
+    packages=("chatterbox-tts==0.1.7",),
+    python="3.11",
+    check="import chatterbox.tts, chatterbox.tts_turbo",
+    notes="chatterbox-tts pins torch 2.6.0, numpy<2 and transformers 5.2.0; Resemble AI test on Python 3.11.",
+))
+register_env(EnvSpec(
+    name="qwen3",
+    # torchaudio stops at 2.11, and its compiled code must match torch's
+    # version, so both are pinned (2.11 is also what Colab itself runs).
+    packages=("qwen-tts==0.1.1", "torch==2.11.*", "torchaudio==2.11.*"),
+    python="3.12",
+    apt=("sox",),
+    check="import qwen_tts",
+    notes="qwen-tts pins transformers 4.57.3. No flash-attn: the T4 cannot use FlashAttention 2.",
+))
 
 
 def register_engine(name: str, path: str) -> None:
@@ -46,22 +79,34 @@ class Preset:
     vary: dict[str, float] = field(default_factory=dict)
     # Reference clip (for engines that clone a voice), relative to the Lektor home
     reference: Optional[str] = None
-    # How a reference clip is made, for designed voices (see Qwen3-TTS VoiceDesign)
-    design: Optional[dict[str, Any]] = None
+    # Name of a designed voice (``designs:`` in voices.yaml). Its synthetic
+    # reference clip is made once by Qwen3-TTS VoiceDesign and used as
+    # ``reference`` (see lektor/voice_design.py).
+    design: Optional[str] = None
     description: str = ""
     language: str = "en-GB"
 
     def fingerprint(self, home: Optional[Path] = None) -> str:
         h = hashlib.sha256(repr((self.engine, self.voice, sorted(self.params.items()),
                                  sorted(self.vary.items()), self.language)).encode())
-        ref = self.reference_path(home)
-        if ref is not None and ref.exists():
-            h.update(hashlib.sha256(ref.read_bytes()).digest())
-        elif self.reference:
-            h.update(self.reference.encode())
+        if self.design and not self.reference:
+            # A designed voice is identified by its definition, so planning
+            # gives the same cache keys before and after the clip is made.
+            d = load_designs(home).get(self.design)
+            h.update(repr(d).encode() if d else self.design.encode())
+        else:
+            ref = self.reference_path(home)
+            if ref is not None and ref.exists():
+                h.update(hashlib.sha256(ref.read_bytes()).digest())
+            elif self.reference:
+                h.update(self.reference.encode())
         return h.hexdigest()[:16]
 
     def reference_path(self, home: Optional[Path] = None) -> Optional[Path]:
+        if self.design and not self.reference:
+            from ..voice_design import design_clip_path
+
+            return design_clip_path(self.design, home)
         if not self.reference:
             return None
         p = Path(self.reference)
@@ -74,6 +119,8 @@ BUILTIN_VOICES = Path(__file__).resolve().parent.parent / "data" / "voices.yaml"
 
 
 def _read_presets(path: Path) -> dict[str, Preset]:
+    import yaml  # imported here so engine workers do not need PyYAML
+
     try:
         data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     except yaml.YAMLError as e:
@@ -99,3 +146,32 @@ def get_preset(name: str, home: Optional[Path] = None) -> Preset:
         raise ConfigError(f"There is no voice preset called '{name}'.",
                           hint="Choose one of: " + ", ".join(sorted(presets)))
     return presets[name]
+
+
+@dataclass
+class Design:
+    """A voice made from a description by Qwen3-TTS VoiceDesign."""
+
+    name: str
+    instruct: str
+    text: str
+    language: str = "English"
+    seed: int = 1
+    description: str = ""
+
+
+def _read_designs(path: Path) -> dict[str, Design]:
+    import yaml
+
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    out = {}
+    for name, d in (data.get("designs") or {}).items():
+        out[name] = Design(name=name, **{k: v for k, v in d.items() if k in Design.__dataclass_fields__ and k != "name"})
+    return out
+
+
+def load_designs(home: Optional[Path] = None) -> dict[str, Design]:
+    designs = _read_designs(BUILTIN_VOICES)
+    if home is not None and (Path(home) / "voices.yaml").exists():
+        designs.update(_read_designs(Path(home) / "voices.yaml"))
+    return designs

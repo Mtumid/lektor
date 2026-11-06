@@ -11,7 +11,7 @@ from lektor import notebook as nb
 NB_DIR = Path(__file__).parent.parent / "notebooks"
 
 
-@pytest.mark.parametrize("name", ["Lektor.ipynb"])
+@pytest.mark.parametrize("name", ["Lektor.ipynb", "Smoke_Test.ipynb"])
 def test_notebook_calls_exist(name):
     data = json.loads((NB_DIR / name).read_text())
     assert data["nbformat"] == 4

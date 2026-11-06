@@ -49,6 +49,8 @@ class EnvSpec:
     check: str = ""
     # Packages installed after the main set, each with --no-deps.
     no_deps: tuple[str, ...] = ()
+    # System packages (apt) the engine needs, installed once per Colab machine.
+    apt: tuple[str, ...] = ()
     notes: str = ""
 
     def digest(self) -> str:
@@ -60,7 +62,7 @@ class EnvSpec:
 ENV_SPECS: dict[str, EnvSpec] = {
     "docling": EnvSpec(
         name="docling",
-        packages=("docling>=2.102,<3",),
+        packages=("docling>=2.102,<3", "torch==2.11.*"),
         check="import docling, docling_core",
         notes="Docling (MIT) for PDF, DOCX, PPTX and HTML layout analysis.",
     ),
@@ -131,6 +133,19 @@ def _run(cmd: list[str], log: Callable[[str], None], env: Optional[dict] = None)
         log(tail)
 
 
+def _apt_install(packages: tuple[str, ...], log: Callable[[str], None]) -> None:
+    missing = [p for p in packages if not shutil.which(p.replace("-ng", "-ng"))]
+    if not missing or not shutil.which("apt-get"):
+        return
+    if hasattr(os, "geteuid") and os.geteuid() != 0:
+        log("Note: cannot install system packages " + ", ".join(missing) + " (not running as root).")
+        return
+    subprocess.run(["apt-get", "-qq", "update"], capture_output=True)
+    proc = subprocess.run(["apt-get", "-qq", "-y", "install", *missing], capture_output=True, text=True)
+    if proc.returncode != 0:
+        log("Note: installing " + ", ".join(missing) + " failed: " + proc.stderr[-300:])
+
+
 def lektor_src() -> Path:
     """A clean copy of the lektor package for PYTHONPATH inside environments."""
     pkg = Path(__file__).resolve().parent
@@ -158,8 +173,11 @@ def ensure_env(name: str, log: Callable[[str], None] = print, force: bool = Fals
     uv = _uv()
     log(f"Preparing the '{name}' environment (first time in this Colab session; this can take a few minutes)...")
     _run(uv + ["venv", "--quiet", "--python", spec.python, str(d)], log)
+    if spec.apt:
+        _apt_install(spec.apt, log)
     py = str(env_python(name))
-    base = uv + ["pip", "install", "--python", py, "--torch-backend", "auto"]
+    # LEKTOR_TORCH_BACKEND lets tests use "cpu"; Colab uses "auto" (match the GPU driver).
+    base = uv + ["pip", "install", "--python", py, "--torch-backend", os.environ.get("LEKTOR_TORCH_BACKEND", "auto")]
     _run(base + list(spec.pip_args) + list(spec.packages), log)
     for pkg in spec.no_deps:
         _run(base + ["--no-deps", pkg], log)

@@ -32,6 +32,15 @@ class MockEngine(Engine):
     def synthesize(self, text: str, voice: str, params: dict[str, Any], seed: int,
                    reference: Optional[str] = None) -> np.ndarray:
         p = {**self.default_params, **(params or {})}
+        # Test hooks for the worker protocol tests.
+        if p.get("chatty"):
+            print("some library printing to stdout")
+        if p.get("fail"):
+            raise RuntimeError("mock failure requested")
+        if p.get("crash"):
+            import os
+
+            os._exit(3)
         sr = self.sample_rate
         rate = float(p.get("rate", 15.0))
         dur = max(0.25, len(text) / rate)

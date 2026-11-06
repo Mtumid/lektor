@@ -34,9 +34,12 @@ explanation and a single cell: fill in the boxes, then press ▶.
 | 6. Quality review | Lektor transcribes its own audio and flags sentences that went wrong | Listen to the flagged ones, accept or regenerate |
 | 7. Package | Builds the DAISY, M4B and MP3 files and records the copy | Download and send to the student |
 
-> **Status**: milestones 1 and 2 are done. Steps 0 to 3 work, and steps 5
-> and 7 work with test tones (the `mock` voice). Real voices arrive in
-> milestone 3; see [CHANGELOG.md](CHANGELOG.md).
+> **Status**: milestones 1 to 3 are done: steps 0 to 5 and 7 (M4B and
+> MP3) work with real voices. Quality checks (step 6) and the DAISY book
+> arrive in milestones 4 and 5; see [CHANGELOG.md](CHANGELOG.md).
+>
+> **Checking a new version**: open `notebooks/Smoke_Test.ipynb` in Colab,
+> run both cells, and send the table it prints to the developer.
 
 ## Getting started
 
@@ -92,6 +95,12 @@ Edit `script/script.md` (section 3 opens it for you), save, and run
 *Check the script again*. The format is explained in
 [docs/script-format.md](docs/script-format.md).
 
+**Which voices are there?**
+Kokoro (eight British and several American voices; works without a GPU),
+Chatterbox and Chatterbox Turbo, and Qwen3-TTS (two built-in English
+speakers, plus British voices *designed* from a written description). Run
+section 4c for the full list. No voice is a copy of a real person.
+
 **How do I start a second book?**
 Run section 1 again with a new book id (a short name with no spaces, such as
 `music-theory-basics`). Use the old id to go back to the first book.
@@ -106,6 +115,7 @@ No. Use a recipient code that you can look up in the library's own records.
 - [Formats](docs/formats.md): which app plays which file
 - [Accessibility and copyright](docs/accessibility-and-copyright.md): what Lektor may change, statements, records
 - [Engines](docs/engines.md): the voices, their licences and requirements
+- [Adding an engine](docs/adding-an-engine.md): for developers
 - [CLAUDE.md](CLAUDE.md): constraints for developers (and Claude Code)
 - [CHANGELOG.md](CHANGELOG.md): what changed, and the assumptions made
 

@@ -1,5 +1,60 @@
 # Changelog
 
+## M3 Real voices in Colab
+
+### Added
+- **Engine isolation** that is tested here, not only designed: each engine gets its own `uv` virtual
+  environment under `/content/lektor_envs/` (`lektor/envs.py`), built the first time it is needed, with
+  `--torch-backend auto` choosing the PyTorch build for the GPU driver. A test builds a real uv environment with
+  only numpy, confirms it cannot see the main environment's packages, and runs the worker inside it.
+- **Worker protocol** (`lektor/engines/worker.py`, `client.py`): a persistent subprocess per engine speaking
+  JSON lines over stdin/stdout; audio passed as temporary `.npy` files; library output on stdout cannot corrupt
+  the protocol; crashes, timeouts and GPU out-of-memory are reported in plain English.
+- **Kokoro** (`kokoro`): all eight British voices and four American ones; works on CPU when there is no GPU.
+- **Chatterbox** (`chatterbox`) and **Chatterbox Turbo** (`chatterbox-turbo`), with exaggeration, cfg_weight and
+  temperature, seeded ±0.1 exaggeration per paragraph, conditioning prepared once per reference clip.
+- **Qwen3-TTS** CustomVoice (`qwen3-custom`: Ryan, Aiden, with a narration instruction), VoiceDesign
+  (`qwen3-design`) and Base (`qwen3-base`), loaded with SDPA attention in float16 on the T4.
+- **Designed voices, "design once, then clone"** (`lektor/voice_design.py`): British female and male voices
+  designed from a written description, saved once to `MyDrive/Lektor/voices/designed/` with a provenance record
+  (`synthetic: true`, `real_person: false`), then used by Qwen3-TTS Base and by Chatterbox for every unit. Cache
+  keys depend on the design's definition, so they are the same before and after the clip is made.
+- **Voice presets** for every engine in `lektor/data/voices.yaml` (extendable from `MyDrive/Lektor/voices.yaml`).
+- **Voice audition** (`lektor/audition.py`): a passage of about two minutes from a chosen chapter, rendered with
+  up to eight presets, labelled A to H in a shuffled order (key kept separately), one MP3 per voice, a combined
+  announced `audition.mp3`, 1.5x and 2x versions with pitch preserving `atempo`, and a feedback form. The
+  chosen letter is saved to book.yaml.
+- Plain English error when a GPU voice is chosen in a session without a GPU.
+- **Notebook** sections 0 to 5 complete (4a audition, 4b record the choice, 4c list voices), and
+  **`notebooks/Smoke_Test.ipynb`**: Docling on a generated PDF, voice design, every engine, voice consistency of
+  the designed voices, and the whole pipeline with all packagers; prints a compact PASS/FAIL table to paste back.
+- Docs: `docs/engines.md` (licences, strengths, memory, speed, how environments work) and
+  `docs/adding-an-engine.md`.
+
+### Checked before pinning (November 2026)
+- Colab: Python 3.12, torch 2.10 to 2.11. Pinned versions: `kokoro==0.9.4`, `misaki[en]==0.9.4`,
+  `chatterbox-tts==0.1.7`, `qwen-tts==0.1.1`, `faster-whisper==1.2.1` (for M4), `docling>=2.102,<3`.
+- Every environment's dependencies were resolved against PyPI with `uv pip compile`. This found a real problem:
+  the Qwen environment would have got torch 2.15 with torchaudio 2.11 (torchaudio stops at 2.11 and must match
+  torch). Kokoro, Qwen and Docling environments therefore pin `torch==2.11.*` (and `torchaudio==2.11.*`), the
+  version Colab itself runs on the T4. Chatterbox keeps its own pin of torch 2.6.0 on Python 3.11.
+- Model cards: Kokoro British voices use `lang_code='b'`; Kokoro is best on 100 to 200 tokens. Both Chatterbox
+  models ship a default voice (`conds.pt`); the brief expected only Turbo to. Chatterbox references must be over
+  5 seconds; Turbo ignores exaggeration and cfg_weight. Qwen3-TTS has no British built-in speaker, so British
+  voices are designed. The T4 cannot use FlashAttention 2, so SDPA is used everywhere.
+
+### Assumptions and decisions
+- Engine environments do not reuse Colab's torch: uv does not count system packages as installed (tested), and
+  Chatterbox needs torch 2.6.0. uv's cache means each wheel downloads once per Colab session.
+- Models are downloaded into the Colab machine's Hugging Face cache each session (not Drive, which is too slow).
+- The default audition set is Kokoro bf_emma, bm_george and bf_isabella, Chatterbox Turbo (designed British
+  female), Chatterbox (designed British male), Qwen3-TTS Ryan, and Qwen3-TTS designed British female and male.
+- Memory and speed figures in `docs/engines.md` are estimates until the smoke test reports real ones.
+
+### Not yet verified (needs the smoke test in Colab)
+- That every engine installs and runs on the current Colab image, and the real-time factors.
+- Voice consistency of the designed voices over a long book (the smoke test reports speaker similarity).
+
 ## M2 Speech preparation to audio, with the mock engine
 
 ### Added
