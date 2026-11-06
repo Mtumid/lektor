@@ -84,6 +84,67 @@ def cmd_validate(args) -> int:
     return 1 if has_errors(issues) else 0
 
 
+@command("prepare", "prepare speech: units.jsonl and lexicon_suggestions.csv")
+def cmd_prepare(args) -> int:
+    from .prepare import run_prepare
+
+    paths, cfg = _book(args)
+    _apply_voice_overrides(args, cfg)
+    r = run_prepare(paths, cfg)
+    print(f"{len(r.units)} units in {r.n_chapters} chapters; {r.n_suggestions} words suggested for the lexicon.")
+    print(f"Units: {paths.units}")
+    print(f"Suggestions: {paths.lexicon_suggestions}")
+    return 0
+
+
+@command("synth", "make audio for every unit not yet cached (resumable)")
+def cmd_synth(args) -> int:
+    from .prepare import run_prepare
+    from .synth import run_synth
+
+    paths, cfg = _book(args)
+    _apply_voice_overrides(args, cfg)
+    run_prepare(paths, cfg, log=lambda m: None)
+    only = args.only.split(",") if args.only else None
+    r = run_synth(paths, cfg, only=only, progress=not args.no_progress)
+    print(f"Made {r.made} units; {r.already} were already done; {len(r.failed)} failed.")
+    for f in r.failed[:20]:
+        print(f"  {f['id']}: {f['problem']}")
+    return 1 if r.failed else 0
+
+
+@command("assemble", "join units into chapter audio and write the timing map")
+def cmd_assemble(args) -> int:
+    from .assemble import run_assemble
+    from .chunk.plan import read_units
+
+    paths, cfg = _book(args)
+    t = run_assemble(paths, cfg, read_units(paths.units))
+    print(f"{len(t['chapters'])} chapters, {t['total_duration'] / 60:.1f} minutes.")
+    return 0
+
+
+@command("package", "build the output packages (M4B, MP3, DAISY)")
+def cmd_package(args) -> int:
+    from .package import run_package
+
+    paths, cfg = _book(args)
+    formats = args.formats.split(",") if args.formats else None
+    r = run_package(paths, cfg, formats)
+    for k, v in r.files.items():
+        print(f"{k}: {v}")
+    for n in r.notes:
+        print("Note:", n)
+    return 0
+
+
+def _apply_voice_overrides(args, cfg) -> None:
+    if getattr(args, "main", None):
+        cfg.voices.main = args.main
+    if getattr(args, "secondary", None):
+        cfg.voices.secondary = args.secondary
+
+
 @command("version", "print the Lektor version")
 def cmd_version(args) -> int:
     print(f"lektor {__version__}")
@@ -114,6 +175,14 @@ def build_parser() -> argparse.ArgumentParser:
             p.add_argument("--reader", choices=["auto", "docling", "fallback"])
         if name == "validate":
             p.add_argument("--script", help="validate this file instead of script.md")
+        if name in ("prepare", "synth"):
+            p.add_argument("--main", help="voice preset for the main voice (overrides book.yaml)")
+            p.add_argument("--secondary", help="voice preset for the secondary voice")
+        if name == "synth":
+            p.add_argument("--only", help="comma separated unit ids to make again")
+            p.add_argument("--no-progress", action="store_true")
+        if name == "package":
+            p.add_argument("--formats", help="comma separated: daisy,m4b,mp3")
         _extend = EXTRA_ARGS.get(name)
         if _extend:
             _extend(p)

@@ -1,0 +1,10 @@
+written,spoken,case_sensitive,whole_word,is_regex,notes
+# Built in defaults. Edit the shared lexicons in Drive instead of this file.,,,,,
+UWL,U W L,yes,yes,no,University of West London
+RNIB,R N I B,yes,yes,no,
+DAISY,daisy,yes,yes,no,
+ISBN,I S B N,yes,yes,no,
+OK,okay,yes,yes,no,
+FAQ,F A Q,yes,yes,no,
+FAQs,F A Qs,yes,yes,no,
+AI,A I,yes,yes,no,

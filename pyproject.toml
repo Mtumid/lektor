@@ -29,6 +29,8 @@ dependencies = [
   "pyloudnorm>=0.1.1",
   "jiwer>=3.0",
   "tqdm>=4.60",
+  "scipy>=1.10",
+  "pyspellchecker>=0.8",
 ]
 
 [project.optional-dependencies]

@@ -34,8 +34,9 @@ explanation and a single cell: fill in the boxes, then press ▶.
 | 6. Quality review | Lektor transcribes its own audio and flags sentences that went wrong | Listen to the flagged ones, accept or regenerate |
 | 7. Package | Builds the DAISY, M4B and MP3 files and records the copy | Download and send to the student |
 
-> **Status**: milestone 1 (steps 0 to 3) is ready to try. Voices, audio
-> and packaging arrive in later milestones; see [CHANGELOG.md](CHANGELOG.md).
+> **Status**: milestones 1 and 2 are done. Steps 0 to 3 work, and steps 5
+> and 7 work with test tones (the `mock` voice). Real voices arrive in
+> milestone 3; see [CHANGELOG.md](CHANGELOG.md).
 
 ## Getting started
 
@@ -101,6 +102,8 @@ No. Use a recipient code that you can look up in the library's own records.
 ## Documentation
 
 - [Script format](docs/script-format.md): how to read and edit `script.md`
+- [Lexicon](docs/lexicon.md): fixing pronunciation
+- [Formats](docs/formats.md): which app plays which file
 - [Accessibility and copyright](docs/accessibility-and-copyright.md): what Lektor may change, statements, records
 - [Engines](docs/engines.md): the voices, their licences and requirements
 - [CLAUDE.md](CLAUDE.md): constraints for developers (and Claude Code)
