@@ -242,6 +242,84 @@ def open_file(which: str = "script", book_id: str = "") -> None:
     link(target)
 
 
+# ---------------------------------------------------------------------------
+# 3c. Pronunciation (lexicon)
+# ---------------------------------------------------------------------------
+@step
+def prepare_speech(book_id: str = "") -> None:
+    from .prepare import run_prepare
+
+    paths, cfg = _current(book_id)
+    r = run_prepare(paths, cfg, log=lambda m: None)
+    hours = (r.main_chars + r.secondary_chars) / 15 / 3600
+    say(f"Prepared {len(r.units)} pieces of speech in {r.n_chapters} chapters (roughly {hours:.1f} hours of audio). "
+        f"The lexicon has {r.lexicon_size} entries.", "ok")
+    if r.n_suggestions:
+        say(f"{r.n_suggestions} words may be mispronounced. Open lexicon_suggestions.csv (below), type how each "
+            "should be said in the 'spoken' column for the ones that matter, save, and run this cell again. "
+            "Rows you leave empty are ignored.", "info")
+    link(paths.lexicon_suggestions, "Lexicon suggestions")
+
+
+@step
+def try_pronunciation(text: str, book_id: str = "") -> None:
+    """Show how a sentence will be spoken, after the lexicon and rules."""
+    from .prepare import build_normaliser
+
+    paths, cfg = _current(book_id)
+    norm = build_normaliser(paths, cfg)
+    n = norm.normalise(text)
+    say(f"Written: {n.display}\nSpoken:  {n.spoken}", "info")
+
+
+# ---------------------------------------------------------------------------
+# 5. Generate audio
+# ---------------------------------------------------------------------------
+@step
+def generate_audio(main_voice: str = "", secondary_voice: str = "", book_id: str = "") -> None:
+    from .assemble import run_assemble
+    from .config import save_book_config
+    from .prepare import run_prepare
+    from .synth import run_synth
+
+    paths, cfg = _current(book_id)
+    changed = False
+    if main_voice and main_voice != cfg.voices.main:
+        cfg.voices.main, changed = main_voice, True
+    if secondary_voice and secondary_voice != cfg.voices.secondary:
+        cfg.voices.secondary, changed = secondary_voice, True
+    if changed:
+        save_book_config(cfg, paths.book_yaml)
+    r0 = run_prepare(paths, cfg, log=lambda m: None)
+    say(f"Voices: {cfg.voices.main} (main) and {cfg.voices.secondary} (library additions). "
+        f"{len(r0.units)} pieces of speech.", "info")
+    r = run_synth(paths, cfg, log=print)
+    if r.failed:
+        say(f"{len(r.failed)} pieces could not be made. They are listed in qa/synth_failures.json. Run this cell "
+            "again to retry them.", "warn")
+        return
+    say(f"All {r.total} pieces of speech are made. Joining them into chapters...", "ok")
+    t = run_assemble(paths, cfg, log=print)
+    say(f"Done: {len(t['chapters'])} chapters, {t['total_duration'] / 3600:.2f} hours.", "ok")
+
+
+# ---------------------------------------------------------------------------
+# 7. Package and download
+# ---------------------------------------------------------------------------
+@step
+def package(formats: str = "", book_id: str = "") -> None:
+    from .package import run_package
+
+    paths, cfg = _current(book_id)
+    wanted = [f.strip() for f in formats.split(",") if f.strip()] or None
+    r = run_package(paths, cfg, wanted, log=print)
+    for kind, path in r.files.items():
+        link(path, kind.upper())
+    for n in r.notes:
+        say(n, "warn")
+    say("The files are in the book's output folder in Drive. Download them from there.", "ok")
+
+
 def environment_report() -> str:
     """Compact environment details (used by the smoke test)."""
     lines = [f"lektor {__version__}", f"python {platform.python_version()} on {platform.platform()}"]

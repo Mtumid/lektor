@@ -130,6 +130,34 @@ nb.validate()
 '''
 
 
+LEXICON_CODE = '''
+#@title 3c. Find words that may be mispronounced { display-mode: "form" }
+nb.prepare_speech()
+'''
+
+TRY_CODE = '''
+#@title 3d. Hear how a sentence will be read (as text) { display-mode: "form" }
+sentence = "Set the tempo to 120 BPM and sidechain the pad at -6 dB with a 4:1 ratio." #@param {type:"string"}
+nb.try_pronunciation(sentence)
+'''
+
+GENERATE_CODE = '''
+#@title 5. Generate audio { display-mode: "form" }
+#@markdown Leave the voices empty to use the ones in book.yaml (the voice chosen in the audition).
+#@markdown `mock-main` and `mock-secondary` are test tones for checking the pipeline without a GPU.
+main_voice = "" #@param {type:"string"}
+secondary_voice = "" #@param {type:"string"}
+nb.generate_audio(main_voice, secondary_voice)
+'''
+
+PACKAGE_CODE = '''
+#@title 7. Package and download { display-mode: "form" }
+#@markdown Leave empty for all formats in book.yaml, or type for example `m4b,mp3`.
+formats = "" #@param {type:"string"}
+nb.package(formats)
+'''
+
+
 def lektor_notebook() -> dict:
     cells = [
         md(f"""
@@ -188,6 +216,32 @@ in the file without reading it aloud.
 """),
         code(REVIEW_CODE, "open_file"),
         code(VALIDATE_CODE, "validate"),
+        md("""
+### Pronunciation
+
+Lexicons tell the voice how to say words it would get wrong: `BPM` is read "B P M", `MIDI` "middy", `4:1`
+"four to one". Lektor ships a draft music production lexicon (in `My Drive/Lektor/lexicons/`), and the cell
+below lists every other word in this book that might be a problem, most frequent first, in
+`lexicon_suggestions.csv`. Open it (File panel, double-click), fill in the **spoken** column for the words
+that matter, save, and run the cell again. See `docs/lexicon.md` for details.
+"""),
+        code(LEXICON_CODE, "prepare_speech"),
+        code(TRY_CODE, "try_pronunciation"),
+        md("""
+## 5. Generate audio
+
+Reads the whole book aloud. This takes hours for a long book. Progress is saved to Drive as it goes:
+**if Colab disconnects, run section 0 again and then this cell again**, and it carries on where it stopped.
+After an edit to the script or the lexicon, only the affected sentences are made again.
+"""),
+        code(GENERATE_CODE, "generate_audio"),
+        md("""
+## 7. Package and download
+
+Builds the finished files in the book's `output` folder: an **M4B** audiobook with chapters, a ZIP of
+**MP3** files (one per chapter) and, from milestone 5, the **DAISY** book for EasyReader.
+"""),
+        code(PACKAGE_CODE, "package"),
     ]
     return notebook(cells)
 

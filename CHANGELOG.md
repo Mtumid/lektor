@@ -1,5 +1,61 @@
 # Changelog
 
+## M2 Speech preparation to audio, with the mock engine
+
+### Added
+- **Normaliser** (`lektor/speech/normaliser.py`): display text and spoken text are kept separately for every
+  sentence. Handles numbers, ordinals, years and decades, currencies, percentages, ranges, times, signed values,
+  URLs and email addresses (domain only, or "web link"), abbreviations, symbols, Roman numerals in headings,
+  and ordinary words written in capitals. Protected placeholders stop later passes changing finished text.
+- **Lexicons** (`lektor/speech/lexicon.py`): CSV with `written, spoken, case_sensitive, whole_word, is_regex,
+  notes`; load order built in, shared Drive lexicons, the book's suggestions, the book's lexicon (later wins).
+  A draft **music production lexicon** of about 170 entries is copied to `MyDrive/Lektor/lexicons/` on first run.
+- **Music rules** (`lektor/speech/rules.py`): Roman numeral progressions and chords versus the pronoun "I", the
+  note A versus the article, time signatures versus fractions, note values and triplets, ratios versus clock
+  times, chord symbols with accidentals and qualities, slash chords, notes with octaves.
+- **Unknown term detector** writing `lexicon_suggestions.csv` (capitals, letters with digits or symbols, words
+  not in the dictionary, British spellings accepted), ranked by frequency with an example and page. The
+  librarian's entries are kept when it is regenerated, and rows with a spoken form are used straight away.
+- **Chunking** (`lektor/chunk/`): sentence splitting that never breaks abbreviations; units of whole sentences
+  up to the engine's limit, never crossing a paragraph; long sentences split at clauses; stable ids; boundary
+  types; voice roles; seeded per-paragraph parameter variation; cache keys; `units.jsonl`.
+- Figures ("Figure." plus caption, optional description, or "Figure on page N"), tables (row by row with
+  column headers, or a spoken notice for large tables), footnotes and endnotes (end of paragraph, end of
+  chapter or skip), library notes and the spoken front matter, all library-added text in the secondary voice.
+- **Engine interface, registry, voice presets** (`lektor/engines/`, `lektor/data/voices.yaml`) and the
+  deterministic **MockEngine**.
+- **Synthesis** (`lektor/synth.py`) with a character-weighted progress bar and time remaining, and a
+  **unit cache** (`lektor/cache.py`) written locally and synced to Drive in zip batches (every 50 units or
+  2 minutes), restored on start.
+- **Assembly** (`lektor/assemble/`): resampling, silence trimming, pauses by boundary with seeded ±15 % jitter,
+  10 ms fades, loudness normalisation to -18 LUFS with a -1.5 dBTP true-peak limiter, and the **timing map**
+  (`audio/timing.json`). Unchanged chapters are not rebuilt.
+- **M4B** (AAC mono 64 kbps, chapters, cover from PDF page 1, tags) and **MP3 ZIP** (one file per chapter,
+  ID3 tags with track numbers) packaging through ffmpeg.
+- CLI: `prepare`, `synth`, `assemble`, `package`. Notebook: 3c/3d pronunciation, 5 generate audio, 7 package.
+- Docs: `docs/lexicon.md`, `docs/formats.md`. Tests: about 130 more (183 in total).
+
+### Assumptions and decisions
+- **Seeds come from the text, not the unit id.** The brief suggested deriving seeds from unit ids. Ids shift
+  when a paragraph is inserted, which would change the cache key of every later unit and force the whole rest of
+  the book to be made again. Seeds are therefore derived from the unit's spoken text (and paragraph variation
+  from the paragraph's text) plus the preset: still exactly reproducible, and an edit only regenerates the
+  units it touches. Pause jitter is keyed on the unit id, which only affects assembly (cheap).
+- **Loudness is normalised per chapter**, each to the same target, rather than measuring the whole book at
+  once (a ten hour book does not fit in Colab's memory as one array). The effect for the listener is the same:
+  every chapter at -18 LUFS.
+- The note A is spoken "ay". A capital A in the middle of a sentence is treated as a letter or note; at the
+  start of a sentence as the article unless a musical word follows. Captions such as "Figure 2 A drum loop"
+  keep the article. Please listen for this in the audition.
+- Chapters: a heading at or above the chapter level starts a new chapter; a part heading directly followed by
+  a chapter heading shares its chapter ("Problems of Beginning: 1. Start With a Beat"). Text before the first
+  chapter heading becomes "Opening pages". Chapter 0 is the spoken front matter.
+- Table rows are read in the main voice (they are the author's words); the "Table. N rows, N columns."
+  introduction and the omitted-table notice are in the secondary voice.
+- Sentence times inside a multi-sentence unit are estimated from text length for now; milestone 5 refines
+  them for DAISY highlighting.
+- The English wordlist comes from `pyspellchecker` (MIT).
+
 ## M1 Foundations (0.1.0)
 
 ### Added

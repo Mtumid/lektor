@@ -1,0 +1,29 @@
+# Lektor voice presets.
+#
+# A preset gives a friendly name to an engine, a voice (or a reference clip)
+# and its parameters. book.yaml chooses a main and a secondary preset:
+#
+#   voices:
+#     main: kokoro-bf-emma
+#     secondary: kokoro-bm-george
+#
+# To add your own, create MyDrive/Lektor/voices.yaml with the same layout;
+# presets there are added to (or replace) these.
+#
+# Fields: engine, voice, params, vary (seeded per-paragraph variation,
+# parameter: +/- amount), reference (clip path relative to MyDrive/Lektor),
+# design (how a designed reference clip is made), description, language.
+
+presets:
+  mock-main:
+    engine: mock
+    voice: low
+    description: Test tone (no real voice). For checking the pipeline only.
+  mock-secondary:
+    engine: mock
+    voice: high
+    description: Higher test tone, for library-added text.
+  mock-announcer:
+    engine: mock
+    voice: announcer
+    description: Test tone used to announce audition samples.

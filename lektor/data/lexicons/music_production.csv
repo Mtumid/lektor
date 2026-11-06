@@ -1,0 +1,173 @@
+written,spoken,case_sensitive,whole_word,is_regex,notes
+# DRAFT seed lexicon for music production books. Please review every row and listen in the audition.,,,,,
+# Lines starting with # are ignored. Add your own rows at the end or in the book's lexicon.csv.,,,,,
+BPM,B P M,yes,yes,no,tempo unit; also see bpm
+bpm,B P M,yes,yes,no,
+BPMs,B P Ms,yes,yes,no,
+DAW,D A W,yes,yes,no,digital audio workstation
+DAWs,D A Ws,yes,yes,no,
+MIDI,middy,yes,yes,no,said MID-ee
+MPE,M P E,yes,yes,no,MIDI polyphonic expression
+CC,C C,yes,yes,no,MIDI continuous controller
+EQ,E Q,yes,yes,no,
+EQs,E Qs,yes,yes,no,
+EQing,E Q-ing,yes,yes,no,
+EQ'd,E Q'd,yes,yes,no,
+LFO,L F O,yes,yes,no,
+LFOs,L F Os,yes,yes,no,
+ADSR,A D S R,yes,yes,no,
+VST,V S T,yes,yes,no,
+VSTs,V S Ts,yes,yes,no,
+AU,A U,yes,yes,no,Audio Units plug-in format
+AAX,A A X,yes,yes,no,
+DSP,D S P,yes,yes,no,
+CPU,C P U,yes,yes,no,
+USB,U S B,yes,yes,no,
+RMS,R M S,yes,yes,no,
+VU,V U,yes,yes,no,
+VCA,V C A,yes,yes,no,
+VCO,V C O,yes,yes,no,
+VCF,V C F,yes,yes,no,
+FM,F M,yes,yes,no,
+PWM,P W M,yes,yes,no,
+FX,effects,yes,yes,no,
+A/B,A B,yes,yes,no,
+I/O,I O,yes,yes,no,
+A&R,A and R,yes,yes,no,
+DJ,D J,yes,yes,no,
+DJs,D Js,yes,yes,no,
+DJing,D J-ing,yes,yes,no,
+MC,M C,yes,yes,no,
+EP,E P,yes,yes,no,
+EPs,E Ps,yes,yes,no,
+LP,L P,yes,yes,no,
+EDM,E D M,yes,yes,no,
+IDM,I D M,yes,yes,no,
+MPC,M P C,yes,yes,no,
+XLR,X L R,yes,yes,no,
+TRS,T R S,yes,yes,no,
+DI,D I,yes,yes,no,as in DI box
+SSL,S S L,yes,yes,no,
+WAV,wave,yes,yes,no,
+AIFF,A I F F,yes,yes,no,
+MP3,M P three,yes,yes,no,
+MP3s,M P threes,yes,yes,no,
+FLAC,flack,yes,yes,no,
+AAC,A A C,yes,yes,no,
+DIY,D I Y,yes,yes,no,
+UK,U K,yes,yes,no,
+US,U S,yes,yes,no,
+USA,U S A,yes,yes,no,
+TV,T V,yes,yes,no,
+PDF,P D F,yes,yes,no,
+URL,U R L,yes,yes,no,
+dB,decibels,yes,yes,no,
+dBFS,decibels full scale,yes,yes,no,
+dBu,decibels U,yes,yes,no,
+dB/oct,decibels per octave,yes,yes,no,
+dB/octave,decibels per octave,yes,yes,no,
+LUFS,luffs,yes,yes,no,loudness units full scale
+Hz,hertz,yes,yes,no,
+kHz,kilohertz,yes,yes,no,
+khz,kilohertz,yes,yes,no,
+ms,milliseconds,yes,yes,no,"case sensitive, so Ms is not changed"
+kbps,kilobits per second,yes,yes,no,
+MB,megabytes,yes,yes,no,
+GB,gigabytes,yes,yes,no,
+KB,kilobytes,yes,yes,no,
+(?<=\d)\s+st\b,semitones,yes,no,yes,Ableton shows semitones as st (+7 st)
+(?<=\d)\s+ct\b,cents,yes,no,yes,fine tuning in cents
+(?<=\d)\s?secs?\b,seconds,yes,no,yes,
+-inf,minus infinity,yes,no,no,fader at minus infinity
+-∞,minus infinity,yes,no,no,
+TR-808,T R eight oh eight,yes,yes,no,Roland drum machine
+TR-909,T R nine oh nine,yes,yes,no,
+TR-707,T R seven oh seven,yes,yes,no,
+TR-606,T R six oh six,yes,yes,no,
+TB-303,T B three oh three,yes,yes,no,Roland bass synthesiser
+SH-101,S H one oh one,yes,yes,no,
+Juno-106,Juno one oh six,yes,yes,no,
+Juno-60,Juno sixty,yes,yes,no,
+DX7,D X seven,yes,yes,no,
+SP-1200,S P twelve hundred,yes,yes,no,
+MPC60,M P C sixty,yes,yes,no,
+OP-1,O P one,yes,yes,no,
+808,eight oh eight,yes,yes,no,"the drum machine; remove if the book uses 808 as a number"
+808s,eight oh eights,yes,yes,no,
+909,nine oh nine,yes,yes,no,
+303,three oh three,yes,yes,no,
+24/96,twenty-four ninety-six,yes,yes,no,bit depth / sample rate
+24/48,twenty-four forty-eight,yes,yes,no,
+16/44.1,sixteen forty-four point one,yes,yes,no,
+sidechain,side chain,no,yes,no,
+sidechains,side chains,no,yes,no,
+sidechained,side chained,no,yes,no,
+sidechaining,side chaining,no,yes,no,
+lo-fi,low fi,no,yes,no,
+lofi,low fi,no,yes,no,
+hi-fi,high fi,no,yes,no,
+timbre,tamber,no,yes,no,
+timbres,tambers,no,yes,no,
+timbral,tambral,no,yes,no,
+Moog,Mogue,yes,yes,no,rhymes with vogue
+M4L,Max for Live,yes,yes,no,
+Max/MSP,Max M S P,yes,yes,no,
+FL Studio,F L Studio,yes,yes,no,
+Reaktor,reactor,yes,yes,no,
+Satie,Sah-tee,yes,yes,no,
+C#,C sharp,yes,yes,no,
+C♯,C sharp,yes,yes,no,
+Db,D flat,yes,yes,no,
+D♭,D flat,yes,yes,no,
+D#,D sharp,yes,yes,no,
+Eb,E flat,yes,yes,no,
+E♭,E flat,yes,yes,no,
+F#,F sharp,yes,yes,no,
+F♯,F sharp,yes,yes,no,
+Gb,G flat,yes,yes,no,
+G#,G sharp,yes,yes,no,
+Ab,A flat,yes,yes,no,
+A♭,A flat,yes,yes,no,
+A#,A sharp,yes,yes,no,
+Bb,B flat,yes,yes,no,
+B♭,B flat,yes,yes,no,
+C#m,C sharp minor,yes,yes,no,
+D#m,D sharp minor,yes,yes,no,
+Ebm,E flat minor,yes,yes,no,
+F#m,F sharp minor,yes,yes,no,
+G#m,G sharp minor,yes,yes,no,
+Abm,A flat minor,yes,yes,no,
+Bbm,B flat minor,yes,yes,no,
+4/4(?!\s+of\b),four four,yes,yes,yes,time signature
+3/4(?!\s+of\b),three four,yes,yes,yes,time signature (3/4 of ... is read as a fraction)
+2/4(?!\s+of\b),two four,yes,yes,yes,time signature
+5/4(?!\s+of\b),five four,yes,yes,yes,time signature
+6/8(?!\s+of\b),six eight,yes,yes,yes,time signature
+7/8(?!\s+of\b),seven eight,yes,yes,yes,time signature
+9/8(?!\s+of\b),nine eight,yes,yes,yes,time signature
+12/8(?!\s+of\b),twelve eight,yes,yes,yes,time signature
+1/2(?=\s*notes?\b),half,yes,yes,yes,note value
+1/4(?=\s*notes?\b),quarter,yes,yes,yes,note value
+1/8(?=\s*notes?\b),eighth,yes,yes,yes,note value
+1/16(?=\s*notes?\b),sixteenth,yes,yes,yes,note value
+1/32(?=\s*notes?\b),thirty-second,yes,yes,yes,note value
+1/4T,quarter note triplet,yes,yes,no,triplet note value
+1/8T,eighth note triplet,yes,yes,no,
+1/16T,sixteenth note triplet,yes,yes,no,
+1/8D,dotted eighth,yes,yes,no,
+2:1,two to one,yes,yes,no,compression ratio
+3:1,three to one,yes,yes,no,
+4:1,four to one,yes,yes,no,
+6:1,six to one,yes,yes,no,
+8:1,eight to one,yes,yes,no,
+10:1,ten to one,yes,yes,no,
+20:1,twenty to one,yes,yes,no,
+∞:1,infinity to one,yes,yes,no,
+ii–V–I,two five one,yes,yes,no,chord progression
+ii-V-I,two five one,yes,yes,no,
+I–IV–V,one four five,yes,yes,no,
+I-IV-V,one four five,yes,yes,no,
+I–V–vi–IV,one five six four,yes,yes,no,
+I-V-vi-IV,one five six four,yes,yes,no,
+vi–IV–I–V,six four one five,yes,yes,no,
+vi-IV-I-V,six four one five,yes,yes,no,
