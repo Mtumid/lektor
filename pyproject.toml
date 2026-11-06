@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lektor"
+version = "0.1.0"
+description = "Turn long documents into accessible audiobooks (DAISY 2.02, M4B, MP3) with open source speech models."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "University of West London Library, alternative formats service" }]
+# Core dependencies are deliberately light so the main Colab process stays
+# stable. Speech engines and Docling run in their own virtual environments
+# (see lektor/envs.py) and are never imported by the main process.
+dependencies = [
+  "pyyaml>=6.0",
+  "pydantic>=2.5",
+  "beautifulsoup4>=4.12",
+  "lxml>=5.0",
+  "pypdf>=4.0",
+  "pypdfium2>=4.20",
+  "pdfplumber>=0.11",
+  "python-docx>=1.1",
+  "pysbd>=0.3.4",
+  "num2words>=0.5.13",
+  "numpy>=1.24",
+  "soundfile>=0.12",
+  "pyloudnorm>=0.1.1",
+  "jiwer>=3.0",
+  "tqdm>=4.60",
+]
+
+[project.optional-dependencies]
+# Only needed in a test or development environment.
+test = ["pytest>=7.4", "reportlab>=4.0"]
+# Docling is normally installed into its own environment by lektor.envs;
+# this extra exists for local development.
+docling = ["docling>=2.102"]
+
+[project.scripts]
+lektor = "lektor.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["lektor*"]
+
+[tool.setuptools.package-data]
+lektor = ["data/*", "data/**/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "slow: tests that take more than a few seconds",
+  "network: tests that need to download models (skipped when the network blocks them)",
+  "docling: tests that need Docling installed",
+]

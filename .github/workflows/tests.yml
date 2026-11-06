@@ -1,0 +1,28 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"   # the same Python as Google Colab
+          cache: pip
+      - name: Install system tools
+        run: sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
+      - name: Install Lektor (CPU only, no speech engines)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[test]"
+      - name: Check the notebooks are up to date
+        run: |
+          python tools/build_notebooks.py
+          git diff --exit-code notebooks/
+      - name: Run tests
+        run: pytest -q -rs
