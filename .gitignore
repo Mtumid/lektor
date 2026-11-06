@@ -1,0 +1,75 @@
+# ---------------------------------------------------------------
+# Copyright hygiene (see CLAUDE.md, hard constraint 6).
+# Book content, extracted text, page images and generated audio must
+# never be committed. These rules make that hard to do by accident.
+# ---------------------------------------------------------------
+
+# Any book working folder, wherever it ends up
+books/
+Lektor/
+lektor_data/
+book_data/
+
+# Source documents (test fixtures are generated at test time instead)
+*.pdf
+*.epub
+*.docx
+*.doc
+*.pptx
+*.odt
+*.rtf
+*.mobi
+*.azw3
+
+# Generated scripts, review reports and units
+script.md
+review.html
+qa_report.html
+units.jsonl
+lexicon_suggestions.csv
+production_log.txt
+production_records.csv
+
+# Audio and packaged outputs
+*.wav
+*.mp3
+*.m4a
+*.m4b
+*.aac
+*.flac
+*.ogg
+*.opus
+*.smil
+ncc.html
+*.zip
+
+# Page images and covers
+*.png
+*.jpg
+*.jpeg
+*.tif
+*.tiff
+*.webp
+!docs/img/*.svg
+
+# Caches
+cache/
+.cache/
+audition/
+
+# Python and tooling
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+.DS_Store
